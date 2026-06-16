@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Análise de Causa Raiz — E-Commerce OTS</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --navy:   #1A2744;
+    --navy2:  #243460;
+    --orange: #E8501A;
+    --teal:   #00897B;
+    --light:  #F4F6F9;
+    --white:  #FFFFFF;
+    --gray:   #64748B;
+    --red:    #DC2626;
+    --green:  #16A34A;
+    --purple: #7C3AED;
+    --text:   #1E293B;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    background: var(--light);
+    color: var(--text);
+    line-height: 1.5;
+  }
+
+  /* ── NAV ── */
+  nav {
+    position: sticky; top: 0; z-index: 100;
+    background: var(--navy);
+    display: flex; align-items: center; gap: 0;
+    padding: 0 2rem;
+    height: 52px;
+    box-shadow: 0 2px 12px rgba(0,0,0,.25);
+  }
+  .nav-brand {
+    font-size: .75rem; font-weight: 700; color: var(--orange);
+    letter-spacing: .12em; text-transform: uppercase;
+    margin-right: auto; white-space: nowrap;
+  }
+  .nav-links { display: flex; gap: 0; }
+  .nav-links a {
+    color: #8899BB; font-size: .75rem; font-weight: 500;
+    text-decoration: none; padding: 0 .8rem; height: 52px;
+    display: flex; align-items: center;
+    border-bottom: 2px solid transparent;
+    transition: color .2s, border-color .2s;
+    white-space: nowrap;
+  }
+  .nav-links a:hover { color: #fff; border-color: var(--orange); }
+
+  /* ── SECTIONS ── */
+  section { scroll-margin-top: 52px; }
+
+  /* ── HERO ── */
+  .hero {
+    background: var(--navy);
+    display: grid; grid-template-columns: 4px 1fr;
+    min-height: 420px;
+    position: relative; overflow: hidden;
+  }
+  .hero-accent { background: var(--orange); }
+  .hero-body {
+    padding: 4rem 3rem 3rem;
+    display: flex; flex-direction: column; justify-content: center;
+  }
+  .hero-eyebrow {
+    font-size: .7rem; font-weight: 700; letter-spacing: .18em;
+    color: var(--orange); text-transform: uppercase; margin-bottom: 1.2rem;
+  }
+  .hero-title {
+    font-size: clamp(2.2rem, 5vw, 3.8rem);
+    font-weight: 800; line-height: 1.1;
+    color: #fff; margin-bottom: 1.5rem;
+  }
+  .hero-divider {
+    width: 80px; height: 2px;
+    background: var(--orange); margin-bottom: 1.5rem;
+  }
+  .hero-meta {
+    font-size: .85rem; color: #7A9ABB;
+    display: flex; gap: 2rem; flex-wrap: wrap;
+  }
+  .hero-meta span { display: flex; align-items: center; gap: .4rem; }
+  .hero-meta strong { color: #B0C8E4; }
+
+  /* KPI strip */
+  .kpi-strip {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    padding: 1.5rem 2rem;
+    background: #fff;
+    box-shadow: 0 2px 8px rgba(0,0,0,.06);
+  }
+  .kpi-card {
+    background: var(--light);
+    border-radius: 10px;
+    padding: 1.2rem 1rem;
+    text-align: center;
+    border: 1px solid #E2E8F0;
+  }
+  .kpi-card.red   { background: #FFF1F1; border-color: #FECACA; }
+  .kpi-card.green { background: #F0FFF4; border-color: #BBF7D0; }
+  .kpi-card.orange{ background: #FFF7ED; border-color: #FED7AA; }
+  .kpi-label { font-size: .7rem; color: var(--gray); font-weight: 500; text-transform: uppercase; letter-spacing: .06em; }
+  .kpi-value { font-size: 2rem; font-weight: 800; margin: .3rem 0 .15rem; }
+  .kpi-card.red    .kpi-value { color: var(--red); }
+  .kpi-card.green  .kpi-value { color: var(--green); }
+  .kpi-card.orange .kpi-value { color: var(--orange); }
+  .kpi-sub { font-size: .68rem; color: var(--gray); }
+
+  /* ── SECTION WRAPPER ── */
+  .section-wrap { padding: 2.5rem 2rem; max-width: 1100px; margin: 0 auto; }
+
+  .section-title {
+    font-size: 1.3rem; font-weight: 800;
+    color: var(--navy); margin-bottom: 1.5rem;
+    display: flex; align-items: center; gap: .6rem;
+  }
+  .section-title::before {
+    content: ''; display: inline-block;
+    width: 4px; height: 1.2em; border-radius: 2px;
+    background: var(--orange);
+  }
+
+  /* ── CHART BAR ── */
+  .chart-wrap { background: #fff; border-radius: 12px; padding: 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,.06); margin-bottom: 1.5rem; }
+  .chart-legend { display: flex; gap: 1.5rem; margin-bottom: 1.2rem; font-size: .75rem; }
+  .legend-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: .3rem; }
+  .bars { display: flex; gap: .6rem; align-items: flex-end; height: 180px; }
+  .bar-group { display: flex; gap: 3px; align-items: flex-end; flex: 1; flex-direction: column; }
+  .bar-col { display: flex; gap: 3px; align-items: flex-end; width: 100%; }
+  .bar {
+    flex: 1; border-radius: 4px 4px 0 0;
+    transition: opacity .2s;
+    min-height: 4px;
+    position: relative;
+  }
+  .bar:hover { opacity: .8; }
+  .bar.atual { background: var(--orange); }
+  .bar.ideal { background: var(--teal); }
+  .bar-label { font-size: .6rem; color: var(--gray); text-align: center; margin-top: .4rem; line-height: 1.3; }
+  .chart-grid { position: relative; }
+
+  /* ── TABLE ── */
+  .table-wrap { background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,.06); }
+  table { width: 100%; border-collapse: collapse; font-size: .82rem; }
+  thead tr { background: var(--navy); color: #fff; }
+  thead th { padding: .7rem 1rem; text-align: left; font-weight: 600; font-size: .72rem; text-transform: uppercase; letter-spacing: .05em; }
+  thead th.center { text-align: center; }
+  tbody tr:nth-child(even) { background: #F8FAFC; }
+  tbody tr:hover { background: #EFF6FF; }
+  tbody td { padding: .65rem 1rem; border-bottom: 1px solid #F1F5F9; }
+  tbody td.center { text-align: center; }
+  .td-process { font-weight: 700; color: var(--navy); }
+  .td-gap-red { color: var(--red); font-weight: 700; }
+  .td-gap-ok  { color: var(--gray); }
+  .td-ideal   { color: var(--green); font-weight: 600; }
+  .td-medio-red { color: var(--red); font-weight: 700; }
+  tfoot tr { background: var(--navy); color: #fff; }
+  tfoot td { padding: .8rem 1rem; font-weight: 700; }
+
+  /* ── CAUSE CARDS ── */
+  .cause-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.2rem; margin-bottom: 1.5rem; }
+  .cause-card {
+    background: #fff; border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.07);
+    overflow: hidden;
+  }
+  .cause-card-header {
+    padding: .8rem 1.2rem;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .cause-card-header h3 { font-size: .9rem; font-weight: 700; color: #fff; }
+  .cause-badge {
+    font-size: .7rem; font-weight: 700;
+    background: rgba(255,255,255,.25); color: #fff;
+    padding: .2rem .6rem; border-radius: 20px;
+  }
+  .cause-card-body { padding: 1rem 1.2rem; }
+  .cause-times {
+    display: flex; gap: .8rem; margin-bottom: .8rem;
+  }
+  .ct { flex: 1; background: var(--light); border-radius: 8px; padding: .5rem .7rem; text-align: center; }
+  .ct-label { font-size: .62rem; color: var(--gray); text-transform: uppercase; letter-spacing: .05em; }
+  .ct-value { font-size: 1.1rem; font-weight: 800; }
+  .ct-value.red { color: var(--red); }
+  .ct-value.green { color: var(--green); }
+  .ct-value.orange { color: var(--orange); }
+  .cause-list { list-style: none; margin-bottom: .8rem; }
+  .cause-list li {
+    padding: .3rem 0; font-size: .78rem; color: #475569;
+    display: flex; gap: .5rem; align-items: flex-start;
+  }
+  .cause-list li::before {
+    content: '▸'; color: currentColor; flex-shrink: 0; margin-top: .05rem;
+  }
+  .cause-action {
+    background: var(--light); border-radius: 8px;
+    padding: .6rem .8rem; font-size: .76rem; color: #334155;
+    display: flex; gap: .5rem; align-items: flex-start;
+  }
+  .cause-action strong { color: var(--navy); }
+
+  /* ── ACTION PLAN ── */
+  .action-table-wrap { background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,.06); }
+  .p1 { color: var(--red); }
+  .p2 { color: var(--orange); }
+  .p3 { color: var(--teal); }
+  .prio-badge {
+    font-size: .7rem; font-weight: 800;
+    padding: .2rem .5rem; border-radius: 4px; display: inline-block;
+  }
+  .prio-badge.p1 { background: #FFF1F1; color: var(--red); }
+  .prio-badge.p2 { background: #FFF7ED; color: var(--orange); }
+  .prio-badge.p3 { background: #F0FDF4; color: var(--teal); }
+  .impact-badge {
+    font-size: .68rem; font-weight: 600;
+    padding: .15rem .5rem; border-radius: 20px;
+  }
+  .impact-alto   { background: #FEE2E2; color: var(--red); }
+  .impact-medio  { background: #FEF3C7; color: #92400E; }
+  .impact-baixo  { background: #D1FAE5; color: var(--green); }
+
+  /* ── CONCLUSION ── */
+  .conclusion {
+    background: var(--navy);
+    display: grid; grid-template-columns: 4px 1fr;
+  }
+  .conclusion-accent { background: var(--orange); }
+  .conclusion-body { padding: 3rem; }
+  .conclusion-body h2 { font-size: 1.8rem; font-weight: 800; color: #fff; margin-bottom: 1.5rem; line-height: 1.3; }
+  .conclusion-points { list-style: none; }
+  .conclusion-points li {
+    display: flex; gap: .8rem; align-items: flex-start;
+    color: #B0C4DE; font-size: .88rem; margin-bottom: .8rem;
+  }
+  .conclusion-dot {
+    width: 22px; height: 22px; border-radius: 50%;
+    background: var(--orange); color: #fff;
+    font-size: .65rem; font-weight: 800;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; margin-top: .05rem;
+  }
+
+  /* ── FOOTER ── */
+  footer {
+    background: #0F1A35; color: #4A6080;
+    text-align: center; font-size: .7rem; padding: 1rem;
+  }
+
+  /* ── NOTE BOX ── */
+  .note-box {
+    background: #EFF6FF; border: 1px solid #BFDBFE;
+    border-radius: 10px; padding: 1rem 1.2rem;
+    font-size: .82rem; color: #334155; margin-top: 1rem;
+    display: flex; gap: .6rem; align-items: flex-start;
+  }
+  .note-box span { font-size: 1.1rem; }
+
+  @media (max-width: 640px) {
+    .kpi-strip { grid-template-columns: repeat(2,1fr); }
+    .nav-links { display: none; }
+    .hero-body { padding: 2rem 1.5rem; }
+    .section-wrap { padding: 1.5rem 1rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-brand">E-Commerce · Causa Raiz OTS</div>
+  <div class="nav-links">
+    <a href="#visao">Visão Geral</a>
+    <a href="#estratificacao">Estratificação</a>
+    <a href="#causas">Causas Raiz</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-accent"></div>
+  <div class="hero-body">
+    <div class="hero-eyebrow">Análise de Causa Raiz</div>
+    <h1 class="hero-title">Performance do<br>E-Commerce</h1>
+    <div class="hero-divider"></div>
+    <div class="hero-meta">
+      <span><strong>OTS Atual:</strong> 18h 35min</span>
+      <span><strong>Meta:</strong> 11h 37min</span>
+      <span><strong>Gap:</strong> +6h 58min</span>
+      <span><strong>Junho 2025  ·  Apresentação: 17/06/2025</strong></span>
+    </div>
+  </div>
+</section>
+
+<!-- KPI STRIP -->
+<div class="kpi-strip" id="visao">
+  <div class="kpi-card red">
+    <div class="kpi-label">OTS Médio Atual</div>
+    <div class="kpi-value">18:35</div>
+    <div class="kpi-sub">hh:mm</div>
+  </div>
+  <div class="kpi-card green">
+    <div class="kpi-label">OTS Ideal / Meta</div>
+    <div class="kpi-value">11:37</div>
+    <div class="kpi-sub">hh:mm</div>
+  </div>
+  <div class="kpi-card orange">
+    <div class="kpi-label">Gap Total</div>
+    <div class="kpi-value">+6:58</div>
+    <div class="kpi-sub">excesso</div>
+  </div>
+  <div class="kpi-card orange">
+    <div class="kpi-label">Desvio da Meta</div>
+    <div class="kpi-value">60%</div>
+    <div class="kpi-sub">acima do ideal</div>
+  </div>
+</div>
+
+<!-- CHART -->
+<div class="section-wrap">
+  <div class="section-title">Tempo Médio vs. Ideal por Etapa</div>
+  <div class="chart-wrap">
+    <div class="chart-legend">
+      <span><span class="legend-dot" style="background:var(--orange)"></span>Tempo Médio</span>
+      <span><span class="legend-dot" style="background:var(--teal)"></span>Tempo Ideal</span>
+    </div>
+    <div style="display:flex; gap:.5rem; align-items:flex-end; height:200px; padding-bottom:2rem; border-bottom:1px solid #E2E8F0; position:relative;">
+      <!-- bars computed as % of max (despacho ~1276min) -->
+      <style>
+        .bar-group2 { display:flex; flex-direction:column; align-items:center; flex:1; height:100%; justify-content:flex-end; }
+        .bar-pair { display:flex; gap:3px; align-items:flex-end; width:100%; }
+        .bbar { flex:1; border-radius:3px 3px 0 0; min-height:3px; }
+        .bbar.a { background:var(--orange); }
+        .bbar.i { background:var(--teal); }
+        .blabel { font-size:.55rem; color:var(--gray); text-align:center; margin-top:.35rem; line-height:1.3; }
+      </style>
+      <!-- max = 1276.3 (Despacho) -->
+      <div class="bar-group2">
+        <div class="bar-pair">
+          <div class="bbar a" style="height:calc(98.3/100*180px)" title="Int. Sistêmica SAP: 98min"></div>
+          <div class="bbar i" style="height:calc(98.3/100*180px)"></div>
+        </div>
+        <div class="blabel">Int.<br>Sistêmica<br>(SAP)</div>
+      </div>
+      <div class="bar-group2">
+        <div class="bar-pair">
+          <div class="bbar a" style="height:calc(40.3/100*180px)" title="Limpeza: 40min"></div>
+          <div class="bbar i" style="height:calc(5/100*180px)"></div>
+        </div>
+        <div class="blabel">Limpeza<br>Transit.</div>
+      </div>
+      <div class="bar-group2">
+        <div class="bar-pair">
+          <div class="bbar a" style="height:calc(21.4/100*180px)"></div>
+          <div class="bbar i" style="height:calc(9/100*180px)"></div>
+        </div>
+        <div class="blabel">Int.<br>Sistêmica<br>(Onda)</div>
+      </div>
+      <div class="bar-group2">
+        <div class="bar-pair">
+          <div class="bbar a" style="height:calc(100/100*180px); background:#DC2626;"></div>
+          <div class="bbar i" style="height:calc(70.6/100*180px)"></div>
+        </div>
+        <div class="blabel">Separação<br>(Fila)</div>
+      </div>
+      <div class="bar-group2">
+        <div class="bar-pair">
+          <div class="bbar a" style="height:calc(3.8/100*180px)"></div>
+          <div class="bbar i" style="height:calc(3/100*180px)"></div>
+        </div>
+        <div class="blabel">Separação<br>(Exec.)</div>
+      </div>
+      <div class="bar-group2">
+        <div class="bar-pair">
+          <div class="bbar a" style="height:calc(40.7/100*180px)"></div>
+          <div class="bbar i" style="height:calc(20/100*180px)"></div>
+        </div>
+        <div class="blabel">Consoli-<br>dação</div>
+      </div>
+      <div class="bar-group2">
+        <div class="bar-pair">
+          <div class="bbar a" style="height:calc(100/100*180px); opacity:.5; background:var(--orange);"></div>
+          <div class="bbar i" style="height:calc(94.2/100*180px); opacity:.5;"></div>
+        </div>
+        <div class="blabel">Fatura-<br>mento</div>
+      </div>
+      <div class="bar-group2">
+        <div class="bar-pair">
+          <div class="bbar a" style="height:calc(100/100*180px); opacity:.3"></div>
+          <div class="bbar i" style="height:calc(100/100*180px); opacity:.3"></div>
+        </div>
+        <div class="blabel">Despacho</div>
+      </div>
+    </div>
+    <p style="font-size:.65rem;color:var(--gray);margin-top:.6rem;">* Despacho e Int. Sistêmica SAP não têm gap — mesmos tempos real e ideal. Barras em destaque = maior gap.</p>
+  </div>
+</div>
+
+<!-- ESTRATIFICAÇÃO -->
+<div class="section-wrap" id="estratificacao">
+  <div class="section-title">Estratificação do Processo — Gaps Identificados</div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Processo</th>
+          <th>Estratificação</th>
+          <th class="center">Tempo Médio</th>
+          <th class="center">Tempo Ideal</th>
+          <th class="center">Gap</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="td-process">Integração Sistêmica</td>
+          <td>Criação V.A até Criação SAP</td>
+          <td class="center">01:38:17</td>
+          <td class="center td-ideal">01:38:17</td>
+          <td class="center td-gap-ok">—</td>
+        </tr>
+        <tr>
+          <td class="td-process">Limpeza Transitório</td>
+          <td>Criação SAP até Criação NEXP</td>
+          <td class="center td-medio-red">00:40:16</td>
+          <td class="center td-ideal">00:05:00</td>
+          <td class="center td-gap-red">+35min</td>
+        </tr>
+        <tr>
+          <td class="td-process">Integração Sistêmica</td>
+          <td>Pedido NEXP até Criação da Onda</td>
+          <td class="center td-medio-red">00:21:23</td>
+          <td class="center td-ideal">00:09:00</td>
+          <td class="center td-gap-red">+12min</td>
+        </tr>
+        <tr style="background:#FFF5F5;">
+          <td class="td-process" style="color:var(--red);">Separação ⚠️</td>
+          <td>Criação onda até Início Separação</td>
+          <td class="center td-medio-red" style="font-size:1rem;">14:06:34</td>
+          <td class="center td-ideal">09:00:00</td>
+          <td class="center td-gap-red" style="font-size:1rem;">+307min</td>
+        </tr>
+        <tr>
+          <td class="td-process">Separação</td>
+          <td>Tempo de Separação</td>
+          <td class="center">00:03:50</td>
+          <td class="center td-ideal">00:03:00</td>
+          <td class="center td-gap-ok">+1min</td>
+        </tr>
+        <tr>
+          <td class="td-process">Consolidação</td>
+          <td>Final Separação até Criação da Remessa</td>
+          <td class="center td-medio-red">00:40:43</td>
+          <td class="center td-ideal">00:20:00</td>
+          <td class="center td-gap-red">+21min</td>
+        </tr>
+        <tr>
+          <td class="td-process">Faturamento</td>
+          <td>Criação da Remessa até Faturamento</td>
+          <td class="center td-medio-red">02:42:37</td>
+          <td class="center td-ideal">02:00:00</td>
+          <td class="center td-gap-red">+43min</td>
+        </tr>
+        <tr>
+          <td class="td-process">Despacho</td>
+          <td>Faturamento até Despacho</td>
+          <td class="center">21:16:17</td>
+          <td class="center td-ideal">21:16:17</td>
+          <td class="center td-gap-ok">—</td>
+        </tr>
+      </tbody>
+      <tfoot>
+        <tr>
+          <td colspan="2">TOTAL OTS</td>
+          <td class="center" style="color:#FFA07A;">18:35:23</td>
+          <td class="center" style="color:#6EE7B7;">11:37:00</td>
+          <td class="center" style="color:#FFA07A;">+6:58</td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+</div>
+
+<!-- PIPELINE GARGALOS -->
+<div style="background:#fff; padding: 2rem 0;" id="causas">
+<div class="section-wrap">
+  <div class="section-title">Onde estão os gargalos no processo</div>
+  <div style="background:var(--light);border-radius:12px;padding:1.5rem;box-shadow:0 2px 8px rgba(0,0,0,.07);">
+  <svg width="100%" viewBox="0 0 680 528" style="font-family:Inter,system-ui,sans-serif;">
+  <defs>
+    <marker id="arr2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+      <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+  </defs>
+
+  <!-- trilho -->
+  <line x1="40" y1="120" x2="640" y2="120" stroke="#CBD5E1" stroke-width="1.5"/>
+
+  <!-- legenda topo -->
+  <circle cx="52" cy="50" r="6" fill="#D1FAE5" stroke="#16A34A" stroke-width="0.5"/>
+  <text font-size="11" fill="#16A34A" font-family="Inter,sans-serif" x="64" y="50" dominant-baseline="central">Sem gap</text>
+  <circle cx="148" cy="50" r="6" fill="#FEF3C7" stroke="#CA8A04" stroke-width="0.5"/>
+  <text font-size="11" fill="#92400E" font-family="Inter,sans-serif" x="160" y="50" dominant-baseline="central">Gargalo</text>
+  <circle cx="248" cy="50" r="6" fill="#FEE2E2" stroke="#DC2626" stroke-width="0.5"/>
+  <text font-size="11" fill="#DC2626" font-family="Inter,sans-serif" x="260" y="50" dominant-baseline="central">Crítico</text>
+
+  <!-- ETAPA 1: Int. Sistêmica — sem gap -->
+  <rect x="40" y="94" width="64" height="52" rx="8" fill="#F1F5F9" stroke="#CBD5E1" stroke-width="0.5"/>
+  <text font-size="11" font-weight="500" fill="#475569" font-family="Inter,sans-serif" x="72" y="112" text-anchor="middle" dominant-baseline="central">Int.</text>
+  <text font-size="11" fill="#475569" font-family="Inter,sans-serif" x="72" y="127" text-anchor="middle" dominant-baseline="central">Sistêmica</text>
+  <circle cx="72" cy="94" r="8" fill="#D1FAE5" stroke="#16A34A" stroke-width="0.5"/>
+  <text font-size="9" fill="#16A34A" font-family="Inter,sans-serif" x="72" y="94" text-anchor="middle" dominant-baseline="central">✓</text>
+  <text font-size="11" fill="#64748B" font-family="Inter,sans-serif" x="72" y="158" text-anchor="middle" dominant-baseline="central">01:38h</text>
+  <text font-size="10" fill="#16A34A" font-family="Inter,sans-serif" x="72" y="172" text-anchor="middle" dominant-baseline="central">sem gap</text>
+
+  <line x1="104" y1="120" x2="126" y2="120" stroke="#CBD5E1" stroke-width="1" marker-end="url(#arr2)"/>
+
+  <!-- ETAPA 2: Limpeza -->
+  <rect x="126" y="94" width="70" height="52" rx="8" fill="#FFFBEB" stroke="#FDE68A" stroke-width="0.5"/>
+  <text font-size="11" font-weight="500" fill="#78350F" font-family="Inter,sans-serif" x="161" y="112" text-anchor="middle" dominant-baseline="central">Limpeza</text>
+  <text font-size="11" fill="#78350F" font-family="Inter,sans-serif" x="161" y="127" text-anchor="middle" dominant-baseline="central">Transitório</text>
+  <circle cx="161" cy="94" r="8" fill="#FEF3C7" stroke="#CA8A04" stroke-width="0.5"/>
+  <text font-size="9" fill="#92400E" font-family="Inter,sans-serif" x="161" y="94" text-anchor="middle" dominant-baseline="central">!</text>
+  <text font-size="11" fill="#64748B" font-family="Inter,sans-serif" x="161" y="158" text-anchor="middle" dominant-baseline="central">00:40h</text>
+  <text font-size="10" fill="#CA8A04" font-family="Inter,sans-serif" x="161" y="172" text-anchor="middle" dominant-baseline="central">+35min</text>
+
+  <line x1="196" y1="120" x2="218" y2="120" stroke="#CBD5E1" stroke-width="1" marker-end="url(#arr2)"/>
+
+  <!-- ETAPA 3: Int. Onda -->
+  <rect x="218" y="94" width="70" height="52" rx="8" fill="#FFFBEB" stroke="#FDE68A" stroke-width="0.5"/>
+  <text font-size="11" font-weight="500" fill="#78350F" font-family="Inter,sans-serif" x="253" y="112" text-anchor="middle" dominant-baseline="central">Int.</text>
+  <text font-size="11" fill="#78350F" font-family="Inter,sans-serif" x="253" y="127" text-anchor="middle" dominant-baseline="central">Onda/NEXP</text>
+  <circle cx="253" cy="94" r="8" fill="#FEF3C7" stroke="#CA8A04" stroke-width="0.5"/>
+  <text font-size="9" fill="#92400E" font-family="Inter,sans-serif" x="253" y="94" text-anchor="middle" dominant-baseline="central">!</text>
+  <text font-size="11" fill="#64748B" font-family="Inter,sans-serif" x="253" y="158" text-anchor="middle" dominant-baseline="central">00:21h</text>
+  <text font-size="10" fill="#CA8A04" font-family="Inter,sans-serif" x="253" y="172" text-anchor="middle" dominant-baseline="central">+12min</text>
+
+  <line x1="288" y1="120" x2="306" y2="120" stroke="#DC2626" stroke-width="2" marker-end="url(#arr2)"/>
+
+  <!-- ETAPA 4: SEPARAÇÃO CRÍTICO -->
+  <rect x="298" y="62" width="106" height="132" rx="10" fill="#FFF0F0" stroke="#DC2626" stroke-width="1" stroke-dasharray="4 3"/>
+  <rect x="306" y="94" width="90" height="60" rx="8" fill="#FEE2E2" stroke="#DC2626" stroke-width="1"/>
+  <text font-size="12" font-weight="600" fill="#991B1B" font-family="Inter,sans-serif" x="351" y="116" text-anchor="middle" dominant-baseline="central">Separação</text>
+  <text font-size="11" fill="#991B1B" font-family="Inter,sans-serif" x="351" y="134" text-anchor="middle" dominant-baseline="central">Fila de espera</text>
+  <circle cx="351" cy="90" r="10" fill="#FEE2E2" stroke="#DC2626" stroke-width="1"/>
+  <text font-size="12" font-weight="600" fill="#DC2626" font-family="Inter,sans-serif" x="351" y="90" text-anchor="middle" dominant-baseline="central">!</text>
+  <rect x="308" y="65" width="86" height="18" rx="4" fill="#DC2626"/>
+  <text font-size="10" font-weight="600" fill="#fff" font-family="Inter,sans-serif" x="351" y="74" text-anchor="middle" dominant-baseline="central">CRÍTICO</text>
+  <text font-size="12" font-weight="700" fill="#DC2626" font-family="Inter,sans-serif" x="351" y="168" text-anchor="middle" dominant-baseline="central">14:06h</text>
+  <text font-size="10" font-weight="700" fill="#DC2626" font-family="Inter,sans-serif" x="351" y="184" text-anchor="middle" dominant-baseline="central">+307min</text>
+
+  <line x1="404" y1="120" x2="426" y2="120" stroke="#CBD5E1" stroke-width="1" marker-end="url(#arr2)"/>
+
+  <!-- ETAPA 5: Consolidação -->
+  <rect x="426" y="94" width="70" height="52" rx="8" fill="#FFFBEB" stroke="#FDE68A" stroke-width="0.5"/>
+  <text font-size="11" font-weight="500" fill="#78350F" font-family="Inter,sans-serif" x="461" y="112" text-anchor="middle" dominant-baseline="central">Consoli-</text>
+  <text font-size="11" fill="#78350F" font-family="Inter,sans-serif" x="461" y="127" text-anchor="middle" dominant-baseline="central">dação</text>
+  <circle cx="461" cy="94" r="8" fill="#FEF3C7" stroke="#CA8A04" stroke-width="0.5"/>
+  <text font-size="9" fill="#92400E" font-family="Inter,sans-serif" x="461" y="94" text-anchor="middle" dominant-baseline="central">!</text>
+  <text font-size="11" fill="#64748B" font-family="Inter,sans-serif" x="461" y="158" text-anchor="middle" dominant-baseline="central">00:41h</text>
+  <text font-size="10" fill="#CA8A04" font-family="Inter,sans-serif" x="461" y="172" text-anchor="middle" dominant-baseline="central">+21min</text>
+
+  <line x1="496" y1="120" x2="520" y2="120" stroke="#CBD5E1" stroke-width="1" marker-end="url(#arr2)"/>
+
+  <!-- ETAPA 6: Faturamento -->
+  <rect x="520" y="94" width="70" height="52" rx="8" fill="#FFFBEB" stroke="#FDE68A" stroke-width="0.5"/>
+  <text font-size="11" font-weight="500" fill="#78350F" font-family="Inter,sans-serif" x="555" y="112" text-anchor="middle" dominant-baseline="central">Fatura-</text>
+  <text font-size="11" fill="#78350F" font-family="Inter,sans-serif" x="555" y="127" text-anchor="middle" dominant-baseline="central">mento</text>
+  <circle cx="555" cy="94" r="8" fill="#FEF3C7" stroke="#CA8A04" stroke-width="0.5"/>
+  <text font-size="9" fill="#92400E" font-family="Inter,sans-serif" x="555" y="94" text-anchor="middle" dominant-baseline="central">!</text>
+  <text font-size="11" fill="#64748B" font-family="Inter,sans-serif" x="555" y="158" text-anchor="middle" dominant-baseline="central">02:43h</text>
+  <text font-size="10" fill="#CA8A04" font-family="Inter,sans-serif" x="555" y="172" text-anchor="middle" dominant-baseline="central">+43min</text>
+
+  <line x1="590" y1="120" x2="612" y2="120" stroke="#CBD5E1" stroke-width="1" marker-end="url(#arr2)"/>
+
+  <!-- ETAPA 7: Despacho -->
+  <rect x="612" y="94" width="60" height="52" rx="8" fill="#F1F5F9" stroke="#CBD5E1" stroke-width="0.5"/>
+  <text font-size="11" font-weight="500" fill="#475569" font-family="Inter,sans-serif" x="642" y="112" text-anchor="middle" dominant-baseline="central">Despa-</text>
+  <text font-size="11" fill="#475569" font-family="Inter,sans-serif" x="642" y="127" text-anchor="middle" dominant-baseline="central">cho</text>
+  <circle cx="642" cy="94" r="8" fill="#D1FAE5" stroke="#16A34A" stroke-width="0.5"/>
+  <text font-size="9" fill="#16A34A" font-family="Inter,sans-serif" x="642" y="94" text-anchor="middle" dominant-baseline="central">✓</text>
+  <text font-size="11" fill="#64748B" font-family="Inter,sans-serif" x="642" y="158" text-anchor="middle" dominant-baseline="central">21:16h</text>
+  <text font-size="10" fill="#16A34A" font-family="Inter,sans-serif" x="642" y="172" text-anchor="middle" dominant-baseline="central">sem gap</text>
+
+  <!-- ══ BARRA DE DISTRIBUIÇÃO DO GAP ══ -->
+  <text font-size="13" font-weight="600" fill="#1A2744" font-family="Inter,sans-serif" x="40" y="216" dominant-baseline="central">Distribuição do gap total (+6h 58min)</text>
+  <rect x="40" y="232" width="600" height="26" rx="4" fill="#F1F5F9"/>
+  <!-- Separação 73% = 438px -->
+  <rect x="40" y="232" width="438" height="26" rx="4" fill="#FEE2E2"/>
+  <!-- Faturamento +10% -->
+  <rect x="478" y="232" width="60" height="26" fill="#FEF3C7"/>
+  <!-- Limpeza +8% -->
+  <rect x="538" y="232" width="48" height="26" fill="#FEF3C7" opacity="0.7"/>
+  <!-- Consolidação +5% -->
+  <rect x="586" y="232" width="30" height="26" fill="#FEF3C7" opacity="0.5"/>
+  <!-- restante ok -->
+  <rect x="616" y="232" width="24" height="26" rx="0" fill="#F1F5F9"/>
+
+  <text font-size="12" font-weight="600" fill="#991B1B" font-family="Inter,sans-serif" x="258" y="245" text-anchor="middle" dominant-baseline="central">Separação — 73%</text>
+  <text font-size="10" fill="#92400E" font-family="Inter,sans-serif" x="508" y="245" text-anchor="middle" dominant-baseline="central">10%</text>
+  <text font-size="10" fill="#92400E" font-family="Inter,sans-serif" x="562" y="245" text-anchor="middle" dominant-baseline="central">8%</text>
+  <text font-size="10" fill="#92400E" font-family="Inter,sans-serif" x="601" y="245" text-anchor="middle" dominant-baseline="central">5%</text>
+
+  <!-- ══ CARDS DE DETALHE ══ -->
+  <!-- Card Separação -->
+  <rect x="40" y="278" width="288" height="110" rx="10" fill="#fff" stroke="#FECACA" stroke-width="1"/>
+  <rect x="40" y="278" width="288" height="34" rx="10" fill="#FFF0F0"/>
+  <rect x="40" y="298" width="288" height="14" fill="#FFF0F0"/>
+  <text font-size="12" font-weight="700" fill="#DC2626" font-family="Inter,sans-serif" x="52" y="299" dominant-baseline="central">Separação — causa raiz crítica</text>
+
+  <line x1="160" y1="320" x2="160" y2="380" stroke="#F1F5F9" stroke-width="1"/>
+  <text font-size="11" fill="#64748B" font-family="Inter,sans-serif" x="52" y="332" dominant-baseline="central">Etapa</text>
+  <text font-size="11" fill="#334155" font-family="Inter,sans-serif" x="168" y="332" dominant-baseline="central">Fila antes da separação</text>
+  <line x1="40" y1="345" x2="328" y2="345" stroke="#F1F5F9" stroke-width="1"/>
+  <text font-size="11" fill="#64748B" font-family="Inter,sans-serif" x="52" y="358" dominant-baseline="central">Causa</text>
+  <text font-size="11" fill="#334155" font-family="Inter,sans-serif" x="168" y="358" dominant-baseline="central">Sem onda dedicada</text>
+
+
+  <!-- Card demais gargalos -->
+  <rect x="348" y="278" width="292" height="170" rx="10" fill="#fff" stroke="#FDE68A" stroke-width="1"/>
+  <rect x="348" y="278" width="292" height="34" rx="10" fill="#FFFBEB"/>
+  <rect x="348" y="298" width="292" height="14" fill="#FFFBEB"/>
+  <text font-size="12" font-weight="700" fill="#92400E" font-family="Inter,sans-serif" x="360" y="299" dominant-baseline="central">Demais gargalos</text>
+
+  <line x1="348" y1="320" x2="640" y2="320" stroke="#FFFBEB" stroke-width="1"/>
+  <rect x="360" y="326" width="8" height="8" rx="2" fill="#FDE68A"/>
+  <text font-size="11" font-weight="500" fill="#78350F" font-family="Inter,sans-serif" x="374" y="330" dominant-baseline="central">Faturamento</text>
+  <text font-size="10" fill="#64748B" font-family="Inter,sans-serif" x="374" y="343" dominant-baseline="central">02:43h · meta 02:00h · +43min</text>
+
+  <line x1="348" y1="354" x2="640" y2="354" stroke="#F8FAFC" stroke-width="1"/>
+  <rect x="360" y="357" width="8" height="8" rx="2" fill="#FDE68A" opacity="0.7"/>
+  <text font-size="11" font-weight="500" fill="#78350F" font-family="Inter,sans-serif" x="374" y="361" dominant-baseline="central">Limpeza Transitório</text>
+  <text font-size="10" fill="#64748B" font-family="Inter,sans-serif" x="374" y="374" dominant-baseline="central">00:40h · meta 00:05h · +35min</text>
+
+  <line x1="348" y1="385" x2="640" y2="385" stroke="#F8FAFC" stroke-width="1"/>
+  <rect x="360" y="388" width="8" height="8" rx="2" fill="#FDE68A" opacity="0.5"/>
+  <text font-size="11" font-weight="500" fill="#78350F" font-family="Inter,sans-serif" x="374" y="392" dominant-baseline="central">Consolidação</text>
+  <text font-size="10" fill="#64748B" font-family="Inter,sans-serif" x="374" y="405" dominant-baseline="central">00:41h · meta 00:20h · +21min</text>
+
+  <line x1="348" y1="416" x2="640" y2="416" stroke="#F8FAFC" stroke-width="1"/>
+  <rect x="360" y="419" width="8" height="8" rx="2" fill="#FDE68A" opacity="0.35"/>
+  <text font-size="11" font-weight="500" fill="#78350F" font-family="Inter,sans-serif" x="374" y="423" dominant-baseline="central">Int. Sistêmica (onda)</text>
+  <text font-size="10" fill="#64748B" font-family="Inter,sans-serif" x="374" y="436" dominant-baseline="central">00:21h · meta 00:09h · +12min</text>
+
+  <!-- ══ BARRA RESUMO ══ -->
+  <rect x="40" y="460" width="600" height="50" rx="8" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="0.5"/>
+  <text font-size="11" fill="#64748B" font-family="Inter,sans-serif" x="52" y="478" dominant-baseline="central">OTS atual</text>
+  <text font-size="13" font-weight="700" fill="#DC2626" font-family="Inter,sans-serif" x="128" y="478" dominant-baseline="central">18:35h</text>
+  <line x1="176" y1="468" x2="176" y2="502" stroke="#E2E8F0" stroke-width="0.5"/>
+  <text font-size="11" fill="#64748B" font-family="Inter,sans-serif" x="188" y="478" dominant-baseline="central">Meta</text>
+  <text font-size="13" font-weight="700" fill="#16A34A" font-family="Inter,sans-serif" x="224" y="478" dominant-baseline="central">11:37h</text>
+  <line x1="276" y1="468" x2="276" y2="502" stroke="#E2E8F0" stroke-width="0.5"/>
+  <text font-size="11" fill="#64748B" font-family="Inter,sans-serif" x="288" y="478" dominant-baseline="central">Gap</text>
+  <text font-size="13" font-weight="700" fill="#E8501A" font-family="Inter,sans-serif" x="318" y="478" dominant-baseline="central">+6:58h</text>
+  <line x1="376" y1="468" x2="376" y2="502" stroke="#E2E8F0" stroke-width="0.5"/>
+  <text font-size="11" fill="#64748B" font-family="Inter,sans-serif" x="388" y="478" dominant-baseline="central">73% do gap concentrado na Separação</text>
+
+  <text font-size="11" fill="#64748B" font-family="Inter,sans-serif" x="52" y="496" dominant-baseline="central">Sem gap</text>
+  <text font-size="11" font-weight="500" fill="#16A34A" font-family="Inter,sans-serif" x="108" y="496" dominant-baseline="central">Int. SAP · Despacho</text>
+  <line x1="276" y1="484" x2="276" y2="502" stroke="#E2E8F0" stroke-width="0.5"/>
+
+
+  </svg>
+  </div>
+</div>
+</div>
+
+
+<div class="section-wrap">
+  <div class="section-title">Causa Raiz #1 — Separação: Tempo de Fila</div>
+  <div style="display:grid; grid-template-columns: repeat(3,1fr); gap:1rem; margin-bottom:1.5rem;">
+    <div class="kpi-card red">
+      <div class="kpi-label">Tempo de Fila</div>
+      <div class="kpi-value">14:06h</div>
+      <div class="kpi-sub">Meta: 09:00h</div>
+    </div>
+    <div class="kpi-card orange">
+      <div class="kpi-label">Gap</div>
+      <div class="kpi-value">+5:06h</div>
+      <div class="kpi-sub">57% acima da meta</div>
+    </div>
+    <div class="kpi-card" style="background:#F0FDF4; border-color:#BBF7D0;">
+      <div class="kpi-label">Impacto no OTS</div>
+      <div class="kpi-value" style="color:var(--teal);">73%</div>
+      <div class="kpi-sub">do gap total concentrado aqui</div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<div class="section-wrap">
+  <div class="section-title">Causa Raiz #2 — Gargalos Sistêmicos e de Processo</div>
+  <div class="cause-grid">
+
+    <div class="cause-card">
+      <div class="cause-card-header" style="background:var(--purple);">
+        <h3>Limpeza Transitório</h3>
+        <span class="cause-badge">+35min de gap</span>
+      </div>
+      <div class="cause-card-body">
+        <div class="cause-times">
+          <div class="ct"><div class="ct-label">Médio</div><div class="ct-value red">00:40</div></div>
+          <div class="ct"><div class="ct-label">Ideal</div><div class="ct-value green">00:05</div></div>
+          <div class="ct"><div class="ct-label">Gap</div><div class="ct-value orange">+35min</div></div>
+        </div>
+        <ul class="cause-list" style="color:var(--purple);">
+          <li>Processo manual de limpeza não automatizado</li>
+          <li>Dependência de operador para confirmar status no SAP</li>
+          <li>Falta de regra de negócio automática no NEXP</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="cause-card">
+      <div class="cause-card-header" style="background:var(--teal);">
+        <h3>Consolidação de Remessa</h3>
+        <span class="cause-badge">+21min de gap</span>
+      </div>
+      <div class="cause-card-body">
+        <div class="cause-times">
+          <div class="ct"><div class="ct-label">Médio</div><div class="ct-value red">00:41</div></div>
+          <div class="ct"><div class="ct-label">Ideal</div><div class="ct-value green">00:20</div></div>
+          <div class="ct"><div class="ct-label">Gap</div><div class="ct-value orange">+21min</div></div>
+        </div>
+        <ul class="cause-list" style="color:var(--teal);">
+          <li>Tempo de conferência física dos volumes elevado</li>
+          <li>Ausência de conferência por leitor de código (RF)</li>
+          <li>Remessas consolidadas manualmente pelo supervisor</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="cause-card">
+      <div class="cause-card-header" style="background:var(--orange);">
+        <h3>Faturamento</h3>
+        <span class="cause-badge">+43min de gap</span>
+      </div>
+      <div class="cause-card-body">
+        <div class="cause-times">
+          <div class="ct"><div class="ct-label">Médio</div><div class="ct-value red">02:43</div></div>
+          <div class="ct"><div class="ct-label">Ideal</div><div class="ct-value green">02:00</div></div>
+          <div class="ct"><div class="ct-label">Gap</div><div class="ct-value orange">+43min</div></div>
+        </div>
+        <ul class="cause-list" style="color:var(--orange);">
+          <li>Fila de aprovação fiscal gera atraso no DANFE</li>
+          <li>Erros cadastrais forçam reprocessamento da NF</li>
+          <li>Integração com transportadora com latência alta</li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<footer>
+  Análise de Causa Raiz — E-Commerce OTS &nbsp;|&nbsp; Dados: Tabela OTS por Processo &nbsp;|&nbsp; Junho 2025  ·  Apresentação: 17/06/2025
+</footer>
+
+</body>
+</html>
